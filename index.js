@@ -57,3 +57,55 @@ app.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Serverfout.', error: err });
   }
 });
+
+// Route om wedstrijden op te halen
+app.get('/matches', (req, res) => {
+  const sql = 'SELECT id, team, opponent, start_time FROM Matches ORDER BY start_time';
+  db.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Fout bij het ophalen van wedstrijden.', error: err });
+    }
+    res.status(200).json(results);
+  });
+});
+
+// Route om een voorspelling in te voeren
+app.post('/predictions', (req, res) => {
+  const { user_id, match_id, predicted_half_time, predicted_full_time } = req.body;
+
+  if (!user_id || !match_id || !predicted_half_time || !predicted_full_time) {
+    return res.status(400).json({ message: 'Alle velden zijn verplicht.' });
+  }
+
+  const sql = `
+    INSERT INTO Predictions (user_id, match_id, predicted_half_time, predicted_full_time)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  db.query(sql, [user_id, match_id, predicted_half_time, predicted_full_time], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: 'Fout bij het invoeren van de voorspelling.', error: err });
+    }
+    res.status(201).json({ message: 'Voorspelling succesvol ingevoerd!' });
+  });
+});
+
+// Route om standen te tonen
+app.get('/leaderboard', (req, res) => {
+  const sql = `
+    SELECT u.email, SUM(p.points) as total_points
+    FROM Predictions p
+    JOIN Users u ON p.user_id = u.id
+    GROUP BY u.id
+    ORDER BY total_points DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Fout bij het ophalen van de standen.', error: err });
+    }
+    res.status(200).json(results);
+  });
+});
+
+
