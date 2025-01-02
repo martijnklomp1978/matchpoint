@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+
+{
   "name": "voetbalapp-backend",
   "version": "1.0.0",
   "main": "index.js",
