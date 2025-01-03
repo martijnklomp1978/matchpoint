@@ -1,18 +1,15 @@
 const express = require('express');
-const mysql = require('mysql2');
-const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
-const app = express();
-
-dotenv.config();
-app.use(express.json());
-
-const port = 3000;
-
-// Database connectie via pool
-const { Pool } = require('pg');
+const { Pool } = require('pg'); // Gebruik de pg-module voor PostgreSQL
 require('dotenv').config();
 
+const app = express();
+const port = 3000;
+
+// Middleware om JSON te verwerken
+app.use(express.json());
+
+// Database connectie via Pool
 const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 5432,
@@ -21,11 +18,7 @@ const pool = new Pool({
   database: process.env.DB_NAME,
 });
 
-module.exports = pool;
-
 // Testroute
-const pool = require('./db');
-
 app.get('/api/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT 1');
@@ -48,11 +41,10 @@ app.post('/api/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // SQL-query om gegevens in de database in te voegen
-    const sql = 'INSERT INTO Users (email, password) VALUES (?, ?)';
-    const [result] = await pool.query(sql, [email, hashedPassword]);
+    const sql = 'INSERT INTO Users (email, password) VALUES ($1, $2) RETURNING id';
+    const result = await pool.query(sql, [email, hashedPassword]);
 
-    console.log('Gebruiker succesvol toegevoegd:', result.insertId);
-    res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!' });
+    res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!', userId: result.rows[0].id });
   } catch (err) {
     console.error('Databasefout:', err);
     res.status(500).json({ message: 'Fout bij registratie.' });
@@ -68,14 +60,14 @@ app.post('/api/login', async (req, res) => {
   }
 
   try {
-    const sql = 'SELECT * FROM Users WHERE email = ?';
-    const [results] = await pool.query(sql, [email]);
+    const sql = 'SELECT * FROM Users WHERE email = $1';
+    const result = await pool.query(sql, [email]);
 
-    if (results.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(401).json({ message: 'Email niet gevonden.' });
     }
 
-    const user = results[0];
+    const user = result.rows[0];
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
@@ -93,9 +85,9 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/matches', async (req, res) => {
   try {
     const sql = 'SELECT id, team, opponent, start_time FROM Matches ORDER BY start_time';
-    const [results] = await pool.query(sql);
+    const result = await pool.query(sql);
 
-    res.status(200).json(results);
+    res.status(200).json(result.rows);
   } catch (err) {
     console.error('Databasefout:', err);
     res.status(500).json({ message: 'Fout bij het ophalen van wedstrijden.' });
@@ -113,9 +105,9 @@ app.post('/api/predictions', async (req, res) => {
   try {
     const sql = `
       INSERT INTO Predictions (user_id, match_id, predicted_half_time, predicted_full_time)
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4)
     `;
-    const [result] = await pool.query(sql, [user_id, match_id, predicted_half_time, predicted_full_time]);
+    await pool.query(sql, [user_id, match_id, predicted_half_time, predicted_full_time]);
 
     res.status(201).json({ message: 'Voorspelling succesvol ingevoerd!' });
   } catch (err) {
@@ -134,9 +126,9 @@ app.get('/api/leaderboard', async (req, res) => {
       GROUP BY u.id
       ORDER BY total_points DESC
     `;
-    const [results] = await pool.query(sql);
+    const result = await pool.query(sql);
 
-    res.status(200).json(results);
+    res.status(200).json(result.rows);
   } catch (err) {
     console.error('Databasefout:', err);
     res.status(500).json({ message: 'Fout bij het ophalen van de standen.' });
