@@ -26,6 +26,7 @@
       "use": "@vercel/static"
     }
   ],
+
   "routes": [
     {
       "src": "/api/(.*)",
@@ -43,10 +44,12 @@
       "src": "/login.js",
       "dest": "/login.js"
     },
+    { "src": "/welcome.html", 
+      "dest": "/welcome.html" }
     {
       "src": "/(.*)",
       "dest": "/index.html"
-    },
-     { "src": "/welcome.html", "dest": "/welcome.html" }
+    }.
+    
   ]
 }
