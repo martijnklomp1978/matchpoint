@@ -12,6 +12,10 @@ document.getElementById("registerForm").addEventListener("submit", async (event)
       body: JSON.stringify({ email, password }),
     });
 
+    if (!response.ok) {
+    throw new Error(`Fout: ${response.status} ${response.statusText}`);
+    }
+
     const data = await response.json();
     document.getElementById("registerMessage").innerText = data.message;
 
@@ -22,6 +26,8 @@ document.getElementById("registerForm").addEventListener("submit", async (event)
       }, 2000);
     }
   } catch (error) {
-    console.error("Fout bij registreren:", error);
+  console.error("Fout bij registreren:", error);
+  document.getElementById("registerMessage").innerText =
+    "Er is een fout opgetreden bij het registreren.";
   }
 });
