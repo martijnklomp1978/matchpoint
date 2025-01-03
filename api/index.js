@@ -58,6 +58,39 @@ app.post('/register', async (req, res) => {
   }
 });
 
+const bcrypt = require('bcrypt');
+
+// Login route
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email en wachtwoord zijn verplicht.' });
+  }
+
+  const sql = 'SELECT * FROM Users WHERE email = ?';
+  db.query(sql, [email], async (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Serverfout.', error: err });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ message: 'Email niet gevonden.' });
+    }
+
+    const user = results[0];
+
+    // Vergelijk het ingevoerde wachtwoord met het gehashte wachtwoord
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ message: 'Wachtwoord is onjuist.' });
+    }
+
+    // Login succesvol
+    res.status(200).json({ message: 'Login succesvol!', email: user.email });
+  });
+});
+
 // Route om wedstrijden op te halen
 app.get('/matches', (req, res) => {
   const sql = 'SELECT id, team, opponent, start_time FROM Matches ORDER BY start_time';
