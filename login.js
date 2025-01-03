@@ -21,6 +21,7 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
       document.getElementById("loginError").innerText =
         "Combinatie email en wachtwoord niet correct, probeer opnieuw.";
     }
+    
   } catch (error) {
     console.error("Fout bij inloggen:", error);
   }
