@@ -14,6 +14,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "welcome.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "register.js",
       "use": "@vercel/static"
     },
