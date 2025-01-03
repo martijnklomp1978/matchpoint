@@ -24,8 +24,16 @@ const pool = new Pool({
 module.exports = pool;
 
 // Testroute
-app.get('/', (req, res) => {
-  res.send('Voetbalapp backend is running!');
+const pool = require('./db');
+
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT 1');
+    res.status(200).json({ message: 'Database connection successful!', result: result.rows });
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(500).json({ message: 'Database connection failed', error });
+  }
 });
 
 // POST /api/register
