@@ -42,6 +42,7 @@
     {
       "src": "/(.*)",
       "dest": "/index.html"
-    }
+    },
+     { "src": "/welcome.html", "dest": "/welcome.html" }
   ]
 }
