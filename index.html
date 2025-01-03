@@ -3,29 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voetbalapp</title>
+  <title>Inloggen</title>
 </head>
 <body>
-  <h1>Voetbalapp</h1>
+  <h1>Inloggen</h1>
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email" required />
+    <input type="password" id="loginPassword" placeholder="Wachtwoord" required />
+    <button type="submit">Inloggen</button>
+  </form>
+  <p id="loginError" style="color: red;"></p>
+  <button onclick="window.location.href='register.html'">Registreren</button>
 
-  <!-- Gebruikersregistratie -->
-  <section>
-    <h2>Registreren</h2>
-    <form id="registerForm">
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Wachtwoord" required />
-      <button type="submit">Registreer</button>
-    </form>
-    <p id="registerMessage"></p>
-  </section>
-
-  <!-- Wedstrijden -->
-  <section>
-    <h2>Wedstrijden</h2>
-    <button id="loadMatches">Laad Wedstrijden</button>
-    <ul id="matchesList"></ul>
-  </section>
-
-  <script src="script.js"></script>
+  <script src="login.js"></script>
 </body>
 </html>
