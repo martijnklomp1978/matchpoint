@@ -1,34 +1,35 @@
-const backendUrl = "https://matchpoint-vert.vercel.app"; // Vervang met je backend-URL
+const express = require('express');
+const bcrypt = require('bcrypt');
+const db = require('./db'); // Verwijzing naar een databaseconfiguratiebestand, indien nodig
 
-document.getElementById("registerForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const email = document.getElementById("registerEmail").value;
-  const password = document.getElementById("registerPassword").value;
+const app = express();
+app.use(express.json()); // Middleware om JSON-requests te verwerken
+
+// Route voor registratie
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email en wachtwoord zijn verplicht.' });
+  }
 
   try {
-    // Verzend het POST-verzoek naar de backend
-    const response = await fetch(`${backendUrl}/api/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+    // Wachtwoord hashen
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Voeg gebruiker toe aan database
+    const sql = 'INSERT INTO Users (email, password) VALUES (?, ?)';
+    db.query(sql, [email, hashedPassword], (err, result) => {
+      if (err) {
+        console.error('Databasefout:', err);
+        return res.status(500).json({ message: 'Fout bij registratie.' });
+      }
+      res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!' });
     });
-
-    // Controleer de response
-    if (!response.ok) {
-    throw new Error(`Fout: ${response.status} ${response.statusText}`);
-    }
-
-    // Verwerk de data
-    const data = await response.json();
-    document.getElementById("registerMessage").innerText = data.message;
-
-    // Na succesvolle registratie, terug naar inloggen
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 2000);
-  } catch (error) {
-    console.error("Fout bij registreren:", error);
-    document.getElementById("registerMessage").innerText =
-      "Er is een fout opgetreden bij het registreren.";
-  }  
+  } catch (err) {
+    console.error('Serverfout:', err);
+    res.status(500).json({ message: 'Serverfout.' });
+  }
 });
+
+module.exports = app; // Exporteer voor Vercel
