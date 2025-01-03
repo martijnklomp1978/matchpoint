@@ -1,4 +1,4 @@
-const backendUrl = "https://<your-vercel-backend-url>"; // Vervang met je backend-URL
+const backendUrl = "https://matchpoint-vert.vercel.app"; // Vervang met je backend-URL
 
 document.getElementById("loginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
