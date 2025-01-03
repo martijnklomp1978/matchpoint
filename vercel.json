@@ -5,19 +5,51 @@
       "src": "api/*.js",
       "use": "@vercel/node"
     },
-    {
+     {
       "src": "*.html",
       "use": "@vercel/static"
     },
-    {
+     {
       "src": "*.js",
+      "use": "@vercel/static"
+    }
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "register.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "register.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "login.js",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/register.html",
+      "dest": "/register.html"
+    },
+    {
+      "src": "/register.js",
+      "dest": "/register.js"
+    },
+    {
+      "src": "/login.js",
+      "dest": "/login.js"
     },
     {
       "src": "/(.*)",
