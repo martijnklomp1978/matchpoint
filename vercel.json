@@ -6,50 +6,22 @@
       "use": "@vercel/node"
     },
     {
-      "src": "index.html",
+      "src": "*.html",
       "use": "@vercel/static"
     },
     {
-      "src": "register.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "welcome.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "register.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "login.js",
+      "src": "*.js",
       "use": "@vercel/static"
     }
   ],
-
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
     },
     {
-      "src": "/register.html",
-      "dest": "/register.html"
-    },
-    {
-      "src": "/register.js",
-      "dest": "/register.js"
-    },
-    {
-      "src": "/login.js",
-      "dest": "/login.js"
-    },
-    { "src": "/welcome.html", 
-      "dest": "/welcome.html" }
-    {
       "src": "/(.*)",
       "dest": "/index.html"
-    }.
-    
+    }
   ]
 }
