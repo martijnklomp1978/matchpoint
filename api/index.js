@@ -12,12 +12,17 @@ app.use(express.json());
 const port = 3000;
 
 // Database connectie
-const db = mysql.createConnection({
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10, // Maximum aantal gelijktijdige verbindingen
+  queueLimit: 0,       // Geen limiet voor wachtrij
 });
+
+module.exports = pool;
 
 db.connect((err) => {
   if (err) {
@@ -155,4 +160,4 @@ app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
 
-module.exports = app;
+
