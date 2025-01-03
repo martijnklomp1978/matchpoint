@@ -1,12 +1,12 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const db = require('./db'); // Verwijzing naar een databaseconfiguratiebestand, indien nodig
+const pool = require('./db'); // Verwijzing naar een databaseconfiguratiebestand, indien nodig
 
 const app = express();
 app.use(express.json()); // Middleware om JSON-requests te verwerken
 
 // Route voor registratie
-app.post('/register', async (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
