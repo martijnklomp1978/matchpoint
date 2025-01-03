@@ -9,26 +9,25 @@ app.use(express.json()); // Middleware om JSON-requests te verwerken
 app.post('/api/register', async (req, res) => {
   const { email, password } = req.body;
 
+  console.log('Ontvangen gegevens:', req.body); // Log de ontvangen gegevens
+
   if (!email || !password) {
+    console.error('Validatiefout: ontbrekende velden');
     return res.status(400).json({ message: 'Email en wachtwoord zijn verplicht.' });
   }
 
   try {
-    // Wachtwoord hashen
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('Gehashed wachtwoord:', hashedPassword);
 
-    // Voeg gebruiker toe aan database
     const sql = 'INSERT INTO Users (email, password) VALUES (?, ?)';
-    db.query(sql, [email, hashedPassword], (err, result) => {
-      if (err) {
-        console.error('Databasefout:', err);
-        return res.status(500).json({ message: 'Fout bij registratie.' });
-      }
-      res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!' });
-    });
+    const [result] = await pool.query(sql, [email, hashedPassword]);
+
+    console.log('Gebruiker succesvol toegevoegd:', result.insertId);
+    res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!' });
   } catch (err) {
-    console.error('Serverfout:', err);
-    res.status(500).json({ message: 'Serverfout.' });
+    console.error('Databasefout:', err); // Log de volledige fout
+    res.status(500).json({ message: 'Fout bij registratie.', error: err.message });
   }
 });
 
