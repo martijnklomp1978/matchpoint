@@ -3,14 +3,11 @@ const mysql = require('mysql2');
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
 const app = express();
-const db = require('./db'); // Zorg dat je databaseverbinding correct is
 
 
 // Middleware om JSON-requests te verwerken
-app.use(express.json());
-
 dotenv.config();
-
+app.use(express.json());
 
 const port = 3000;
 
@@ -71,7 +68,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-module.exports = app;
 
 // Login route
 app.post('/login', (req, res) => {
@@ -154,4 +150,9 @@ app.get('/leaderboard', (req, res) => {
   });
 });
 
+// Start server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
 
+module.exports = app;
