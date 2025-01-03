@@ -7,7 +7,7 @@ document.getElementById("registerForm").addEventListener("submit", async (event)
 
   try {
     // Verzend het POST-verzoek naar de backend
-    const response = await fetch(`${backendUrl}/register`, {
+    const response = await fetch(`${backendUrl}/api/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
