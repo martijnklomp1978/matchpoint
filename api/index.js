@@ -1,13 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const { Pool } = require('pg'); // Gebruik de pg-module voor PostgreSQL
+const { Pool } = require('pg'); // PostgreSQL-module
 require('dotenv').config();
 
 const app = express();
-const port = 3000;
-
-// Middleware om JSON te verwerken
-app.use(express.json());
+const port = process.env.PORT || 3000;
 
 // Database connectie via Pool
 const pool = new Pool({
@@ -18,14 +15,17 @@ const pool = new Pool({
   database: process.env.DB_NAME,
 });
 
+// Middleware om JSON te verwerken
+app.use(express.json());
+
 // Testroute
 app.get('/api/test-db', async (req, res) => {
   try {
-    const result = await pool.query('SELECT 1');
+    const result = await pool.query('SELECT NOW()');
     res.status(200).json({ message: 'Database connection successful!', result: result.rows });
   } catch (error) {
     console.error('Database connection failed:', error);
-    res.status(500).json({ message: 'Database connection failed', error });
+    res.status(500).json({ message: 'Database connection failed', error: error.message });
   }
 });
 
@@ -39,15 +39,13 @@ app.post('/api/register', async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // SQL-query om gegevens in de database in te voegen
     const sql = 'INSERT INTO Users (email, password) VALUES ($1, $2) RETURNING id';
     const result = await pool.query(sql, [email, hashedPassword]);
 
     res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!', userId: result.rows[0].id });
   } catch (err) {
-    console.error('Databasefout:', err);
-    res.status(500).json({ message: 'Fout bij registratie.' });
+    console.error('Databasefout bij registratie:', err);
+    res.status(500).json({ message: 'Fout bij registratie.', error: err.message });
   }
 });
 
@@ -76,8 +74,8 @@ app.post('/api/login', async (req, res) => {
 
     res.status(200).json({ message: 'Login succesvol!', email: user.email });
   } catch (err) {
-    console.error('Databasefout:', err);
-    res.status(500).json({ message: 'Serverfout.' });
+    console.error('Databasefout bij inloggen:', err);
+    res.status(500).json({ message: 'Serverfout.', error: err.message });
   }
 });
 
@@ -89,8 +87,8 @@ app.get('/api/matches', async (req, res) => {
 
     res.status(200).json(result.rows);
   } catch (err) {
-    console.error('Databasefout:', err);
-    res.status(500).json({ message: 'Fout bij het ophalen van wedstrijden.' });
+    console.error('Databasefout bij het ophalen van wedstrijden:', err);
+    res.status(500).json({ message: 'Fout bij het ophalen van wedstrijden.', error: err.message });
   }
 });
 
@@ -111,8 +109,8 @@ app.post('/api/predictions', async (req, res) => {
 
     res.status(201).json({ message: 'Voorspelling succesvol ingevoerd!' });
   } catch (err) {
-    console.error('Databasefout:', err);
-    res.status(500).json({ message: 'Fout bij het invoeren van de voorspelling.' });
+    console.error('Databasefout bij voorspellingen:', err);
+    res.status(500).json({ message: 'Fout bij het invoeren van de voorspelling.', error: err.message });
   }
 });
 
@@ -120,7 +118,7 @@ app.post('/api/predictions', async (req, res) => {
 app.get('/api/leaderboard', async (req, res) => {
   try {
     const sql = `
-      SELECT u.email, SUM(p.points) as total_points
+      SELECT u.email, COALESCE(SUM(p.points), 0) as total_points
       FROM Predictions p
       JOIN Users u ON p.user_id = u.id
       GROUP BY u.id
@@ -130,8 +128,8 @@ app.get('/api/leaderboard', async (req, res) => {
 
     res.status(200).json(result.rows);
   } catch (err) {
-    console.error('Databasefout:', err);
-    res.status(500).json({ message: 'Fout bij het ophalen van de standen.' });
+    console.error('Databasefout bij het ophalen van de standen:', err);
+    res.status(500).json({ message: 'Fout bij het ophalen van de standen.', error: err.message });
   }
 });
 
