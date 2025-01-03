@@ -4,48 +4,28 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
 const app = express();
 
-
-// Middleware om JSON-requests te verwerken
 dotenv.config();
 app.use(express.json());
 
 const port = 3000;
 
-// Database connectie
+// Database connectie via pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10, // Maximum aantal gelijktijdige verbindingen
-  queueLimit: 0,       // Geen limiet voor wachtrij
-});
-
-module.exports = pool;
-
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed:', err);
-    return;
-  }
-  console.log('Connected to the database.');
-});
-
-app.use(express.json());
+  connectionLimit: 10,
+  queueLimit: 0,
+}).promise(); // Gebruik de promise-API
 
 // Testroute
 app.get('/', (req, res) => {
   res.send('Voetbalapp backend is running!');
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
-
-
-// POST /register
-
+// POST /api/register
 app.post('/api/register', async (req, res) => {
   const { email, password } = req.body;
 
@@ -54,110 +34,105 @@ app.post('/api/register', async (req, res) => {
   }
 
   try {
-    // Hash het wachtwoord
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // SQL-query om gegevens in de database in te voegen
     const sql = 'INSERT INTO Users (email, password) VALUES (?, ?)';
-    db.query(sql, [email, hashedPassword], (err, result) => {
-      if (err) {
-        console.error('Databasefout:', err);
-        return res.status(500).json({ message: 'Fout bij registratie.' });
-      }
-      console.log('Gebruiker succesvol toegevoegd:', result.insertId);
-      res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!' });
-    });
+    const [result] = await pool.query(sql, [email, hashedPassword]);
+
+    console.log('Gebruiker succesvol toegevoegd:', result.insertId);
+    res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!' });
   } catch (err) {
-    console.error('Serverfout:', err);
-    res.status(500).json({ message: 'Serverfout.' });
+    console.error('Databasefout:', err);
+    res.status(500).json({ message: 'Fout bij registratie.' });
   }
 });
 
-
-// Login route
-app.post('/login', (req, res) => {
+// POST /api/login
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email en wachtwoord zijn verplicht.' });
   }
 
-  const sql = 'SELECT * FROM Users WHERE email = ?';
-  db.query(sql, [email], async (err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Serverfout.', error: err });
-    }
+  try {
+    const sql = 'SELECT * FROM Users WHERE email = ?';
+    const [results] = await pool.query(sql, [email]);
 
     if (results.length === 0) {
       return res.status(401).json({ message: 'Email niet gevonden.' });
     }
 
     const user = results[0];
-
-    // Vergelijk het ingevoerde wachtwoord met het gehashte wachtwoord
     const match = await bcrypt.compare(password, user.password);
+
     if (!match) {
       return res.status(401).json({ message: 'Wachtwoord is onjuist.' });
     }
 
-    // Login succesvol
     res.status(200).json({ message: 'Login succesvol!', email: user.email });
-  });
+  } catch (err) {
+    console.error('Databasefout:', err);
+    res.status(500).json({ message: 'Serverfout.' });
+  }
 });
 
-// Route om wedstrijden op te halen
-app.get('/matches', (req, res) => {
-  const sql = 'SELECT id, team, opponent, start_time FROM Matches ORDER BY start_time';
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Fout bij het ophalen van wedstrijden.', error: err });
-    }
+// GET /api/matches
+app.get('/api/matches', async (req, res) => {
+  try {
+    const sql = 'SELECT id, team, opponent, start_time FROM Matches ORDER BY start_time';
+    const [results] = await pool.query(sql);
+
     res.status(200).json(results);
-  });
+  } catch (err) {
+    console.error('Databasefout:', err);
+    res.status(500).json({ message: 'Fout bij het ophalen van wedstrijden.' });
+  }
 });
 
-// Route om een voorspelling in te voeren
-app.post('/predictions', (req, res) => {
+// POST /api/predictions
+app.post('/api/predictions', async (req, res) => {
   const { user_id, match_id, predicted_half_time, predicted_full_time } = req.body;
 
   if (!user_id || !match_id || !predicted_half_time || !predicted_full_time) {
     return res.status(400).json({ message: 'Alle velden zijn verplicht.' });
   }
 
-  const sql = `
-    INSERT INTO Predictions (user_id, match_id, predicted_half_time, predicted_full_time)
-    VALUES (?, ?, ?, ?)
-  `;
+  try {
+    const sql = `
+      INSERT INTO Predictions (user_id, match_id, predicted_half_time, predicted_full_time)
+      VALUES (?, ?, ?, ?)
+    `;
+    const [result] = await pool.query(sql, [user_id, match_id, predicted_half_time, predicted_full_time]);
 
-  db.query(sql, [user_id, match_id, predicted_half_time, predicted_full_time], (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: 'Fout bij het invoeren van de voorspelling.', error: err });
-    }
     res.status(201).json({ message: 'Voorspelling succesvol ingevoerd!' });
-  });
+  } catch (err) {
+    console.error('Databasefout:', err);
+    res.status(500).json({ message: 'Fout bij het invoeren van de voorspelling.' });
+  }
 });
 
-// Route om standen te tonen
-app.get('/leaderboard', (req, res) => {
-  const sql = `
-    SELECT u.email, SUM(p.points) as total_points
-    FROM Predictions p
-    JOIN Users u ON p.user_id = u.id
-    GROUP BY u.id
-    ORDER BY total_points DESC
-  `;
+// GET /api/leaderboard
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const sql = `
+      SELECT u.email, SUM(p.points) as total_points
+      FROM Predictions p
+      JOIN Users u ON p.user_id = u.id
+      GROUP BY u.id
+      ORDER BY total_points DESC
+    `;
+    const [results] = await pool.query(sql);
 
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Fout bij het ophalen van de standen.', error: err });
-    }
     res.status(200).json(results);
-  });
+  } catch (err) {
+    console.error('Databasefout:', err);
+    res.status(500).json({ message: 'Fout bij het ophalen van de standen.' });
+  }
 });
 
 // Start server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
-
