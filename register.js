@@ -1,4 +1,4 @@
-const backendUrl = "https://<your-vercel-url>"; // Backend-URL
+const backendUrl = "https://matchpoint-vert.vercel.app"; // Backend-URL
 
 document.getElementById("registerForm").addEventListener("submit", async (event) => {
   event.preventDefault(); // Voorkom dat de pagina herlaadt
