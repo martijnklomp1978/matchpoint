@@ -4,19 +4,107 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inloggen</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h1 {
+      text-align: center;
+    }
+    input {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #loginError {
+      color: red;
+      margin-bottom: 10px;
+    }
+    .register-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #007BFF;
+      font-size: 14px;
+    }
+    .register-link:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <h1>Inloggen</h1>
-  <form id="loginForm">
-    <input type="email" id="loginEmail" placeholder="Email" required />
-    <input type="password" id="loginPassword" placeholder="Wachtwoord" required />
-    <button type="submit">Inloggen</button>
-  </form>
-  <p id="loginError" style="color: red;"></p>
-  
-  <!-- Knop Registreren -->
-  <button type="button" onclick="window.location.href='register.html'">Registreren</button>
+  <div class="container">
+    <h1>Inloggen</h1>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" required />
+      <input type="password" id="loginPassword" placeholder="Wachtwoord" required />
+      <p id="loginError"></p>
+      <button type="submit">Inloggen</button>
+    </form>
+    <a href="register.html" class="register-link">Nog geen account? Registreer hier</a>
+  </div>
 
-  <script src="login.js"></script>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const loginError = document.getElementById('loginError');
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          loginError.textContent = errorData.message || 'Inloggen mislukt. Probeer opnieuw.';
+          return;
+        }
+
+        const data = await response.json();
+        localStorage.setItem('user', JSON.stringify(data)); // Optioneel: gebruikersinformatie opslaan
+        window.location.href = 'welcome.html'; // Doorsturen naar welkomstpagina
+      } catch (error) {
+        console.error('Fout bij inloggen:', error);
+        loginError.textContent = 'Er is een probleem opgetreden. Probeer later opnieuw.';
+      }
+    });
+  </script>
 </body>
 </html>
