@@ -10,15 +10,18 @@ app.use(express.json());
 const port = 3000;
 
 // Database connectie via pool
-const pool = mysql.createPool({
+const { Pool } = require('pg');
+require('dotenv').config();
+
+const pool = new Pool({
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT || 5432,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-}).promise(); // Gebruik de promise-API
+});
+
+module.exports = pool;
 
 // Testroute
 app.get('/', (req, res) => {
