@@ -1,6 +1,10 @@
 const express = require('express');
 const mysql = require('mysql2');
 const dotenv = require('dotenv');
+const bcrypt = require('bcrypt');
+
+// Middleware om JSON-requests te verwerken
+app.use(express.json());
 
 dotenv.config();
 
@@ -34,8 +38,8 @@ app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
 
-const bcrypt = require('bcrypt');
 
+// POST /register
 
 app.post('/register', async (req, res) => {
   const { email, password } = req.body;
