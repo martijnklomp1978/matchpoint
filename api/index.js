@@ -2,13 +2,16 @@ const express = require('express');
 const mysql = require('mysql2');
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
+const app = express();
+const db = require('./db'); // Zorg dat je databaseverbinding correct is
+
 
 // Middleware om JSON-requests te verwerken
 app.use(express.json());
 
 dotenv.config();
 
-const app = express();
+
 const port = 3000;
 
 // Database connectie
@@ -67,6 +70,8 @@ app.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Serverfout.' });
   }
 });
+
+module.exports = app;
 
 // Login route
 app.post('/login', (req, res) => {
