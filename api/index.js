@@ -36,7 +36,7 @@ app.listen(port, () => {
 
 const bcrypt = require('bcrypt');
 
-// Registratie route
+
 app.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
@@ -45,20 +45,24 @@ app.post('/register', async (req, res) => {
   }
 
   try {
+    // Hash het wachtwoord
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // SQL-query om gegevens in de database in te voegen
     const sql = 'INSERT INTO Users (email, password) VALUES (?, ?)';
     db.query(sql, [email, hashedPassword], (err, result) => {
       if (err) {
-        return res.status(500).json({ message: 'Fout bij registratie.', error: err });
+        console.error('Databasefout:', err);
+        return res.status(500).json({ message: 'Fout bij registratie.' });
       }
+      console.log('Gebruiker succesvol toegevoegd:', result.insertId);
       res.status(201).json({ message: 'Gebruiker succesvol geregistreerd!' });
     });
   } catch (err) {
-    res.status(500).json({ message: 'Serverfout.', error: err });
+    console.error('Serverfout:', err);
+    res.status(500).json({ message: 'Serverfout.' });
   }
 });
-
-const bcrypt = require('bcrypt');
 
 // Login route
 app.post('/login', (req, res) => {
